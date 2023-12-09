@@ -82,4 +82,4 @@ xtwone3four
 4nineeightseven2
 zoneight234
 7pqrstsixteen`;
-console.log(await solution2(result));
+console.log(solution2(result));

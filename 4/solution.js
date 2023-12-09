@@ -87,4 +87,4 @@ function solution2(input) {
 
 const result = await fs.readFile('./inputs.txt', 'utf-8');
 
-console.log(await solution2(result));
+console.log(solution2(result));

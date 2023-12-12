@@ -7,13 +7,20 @@ const test1 = `???.### 1,1,3
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1`;
 
-function replace(arr, index, item) {
-  const rep = [...arr];
-  rep[index] = item;
-  return rep;
+function memoize(cb) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = cb.apply(null, args);
+    cache.set(key, result);
+    return result;
+  };
 }
 
-function mutate(code, numbers, mode, target, current, index) {
+const mutate = memoize((code, numbers, mode, target, current, index) => {
   if (index >= code.length) {
     if (target === numbers.length - 1) {
       const result = numbers[target] === current ? 1 : 0;
@@ -23,10 +30,11 @@ function mutate(code, numbers, mode, target, current, index) {
     return result;
   }
   const char = code[index];
-  if (char === '.') {
+  let total = 0;
+  if (char === '.' || char === '?') {
     if (mode === '#') {
       if (numbers[target] === current) {
-        return mutate(
+        total += mutate(
           code,
           numbers,
           '.',
@@ -35,19 +43,19 @@ function mutate(code, numbers, mode, target, current, index) {
           index + 1,
         );
       }
-      return 0;
+    } else {
+      total += mutate(
+        code,
+        numbers,
+        '.',
+        target,
+        0,
+        index + 1,
+      );
     }
-    return mutate(
-      code,
-      numbers,
-      '.',
-      target,
-      0,
-      index + 1,
-    );
   }
-  if (char === '#') {
-    return mutate(
+  if (char === '#' || char === '?') {
+    total += mutate(
       code,
       numbers,
       '#',
@@ -56,25 +64,8 @@ function mutate(code, numbers, mode, target, current, index) {
       index + 1,
     );
   }
-  if (char === '?') {
-    return mutate(
-      replace(code, index, '#'),
-      numbers,
-      mode,
-      target,
-      current,
-      index,
-    ) + mutate(
-      replace(code, index, '.'),
-      numbers,
-      mode,
-      target,
-      current,
-      index,
-    );
-  }
-  return 0;
-}
+  return total;
+});
 
 function permute({ code, numbers }) {
   return mutate(
